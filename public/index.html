@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>甜点订购系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>甜点订购系统</h1>
+        <div id="notification" class="notification"></div>
+        
+        <!-- 添加导入导出按钮组 -->
+        <div class="action-buttons">
+            <button onclick="exportDailyOrders()">导出当日订单</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleFileImport(this)">
+            <button onclick="document.getElementById('importFile').click()">导入订单数据</button>
+            <button onclick="showGroupOrderDialog()">接龙导入</button>
+        </div>
+        
+        <div class="order-form">
+            <div class="customer-list">
+                <h2>客户列表</h2>
+                <div id="customersList"></div>
+                <button onclick="addNewCustomer()" class="add-customer-btn">添加新客户</button>
+            </div>
+            <div class="current-order">
+                <h2>当前订单</h2>
+                <div class="customer-info">
+                    <input type="text" id="customerName" placeholder="客户姓名" required>
+                    <input type="text" id="customerPhone" placeholder="客户电话（可选）">
+                    <input type="text" id="customerAddress" placeholder="送货地址（可选）">
+                </div>
+                <table id="orderTable">
+                    <thead>
+                        <tr>
+                            <th>商品名称</th>
+                            <th>单价</th>
+                            <th>数量</th>
+                            <th>小计</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3">总计</td>
+                            <td id="totalPrice">¥0.00</td>
+                            <td>
+                                <button onclick="addRow()">添加商品</button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="order-actions">
+                    <button onclick="saveCurrentOrder()">保存当前订单</button>
+                    <button id="submitAllOrders" onclick="submitAllOrders()">生成汇总表格</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 添加商品统计表格 -->
+        <div class="summary-section">
+            <h2>商品订购统计</h2>
+            <table id="productSummaryTable">
+                <thead>
+                    <tr>
+                        <th>商品名称</th>
+                        <th>订购总数</th>
+                        <th>总金额</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td>总计</td>
+                        <td id="totalQuantity">0</td>
+                        <td id="summaryTotalPrice">¥0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 添加接龙导入对话框 -->
+    <div id="groupOrderDialog" class="dialog-overlay">
+        <div class="dialog-content">
+            <h2>接龙订单导入</h2>
+            <textarea id="groupOrderText" placeholder="请粘贴接龙内容..."></textarea>
+            <div class="dialog-buttons">
+                <button onclick="importGroupOrder()">导入</button>
+                <button onclick="closeGroupOrderDialog()">取消</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

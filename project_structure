@@ -1,0 +1,8 @@
+project/
+  ├── public/
+  │   ├── index.html
+  │   ├── styles.css
+  │   ├── script.js
+  │   └── price.json
+  ├── server.js
+  └── package.json 
