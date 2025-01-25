@@ -1,0 +1,25 @@
+.customer-list {
+  margin-bottom: 2rem;
+}
+
+.customer-card {
+  margin-bottom: 1rem;
+}
+
+.customer-card.active {
+  border: 2px solid #1976d2;
+}
+
+.items-list {
+  margin-top: 0.5rem;
+}
+
+.item-tag {
+  display: inline-block;
+  background-color: #e3f2fd;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+} 

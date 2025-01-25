@@ -1,0 +1,16 @@
+.order-form {
+  margin-bottom: 2rem;
+}
+
+.customer-info {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+} 

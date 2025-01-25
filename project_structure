@@ -1,8 +1,38 @@
 project/
+  ├── src/
+  │   ├── components/
+  │   │   ├── CustomerList/
+  │   │   │   ├── index.jsx
+  │   │   │   └── style.css
+  │   │   ├── OrderForm/
+  │   │   │   ├── index.jsx
+  │   │   │   └── style.css
+  │   │   ├── ProductSummary/
+  │   │   │   ├── index.jsx
+  │   │   │   └── style.css
+  │   │   └── GroupOrderDialog/
+  │   │       ├── index.jsx
+  │   │       └── style.css
+  │   ├── services/
+  │   │   ├── api.js
+  │   │   └── storage.js
+  │   ├── hooks/
+  │   │   └── useNotification.js
+  │   ├── context/
+  │   │   └── AppContext.js
+  │   ├── utils/
+  │   │   ├── price.js
+  │   │   └── parser.js
+  │   ├── assets/
+  │   │   └── price.json
+  │   ├── App.jsx
+  │   ├── index.jsx
+  │   └── index.html
   ├── public/
-  │   ├── index.html
-  │   ├── styles.css
-  │   ├── script.js
-  │   └── price.json
-  ├── server.js
+  ├── server/
+  │   ├── routes/
+  │   │   ├── orders.js
+  │   │   └── daily.js
+  │   └── server.js
+  ├── webpack.config.js
   └── package.json 
