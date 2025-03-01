@@ -1,6 +1,6 @@
 import { Order } from './Order';
 import { OrderCalculator } from './OrderCalculator';
-import { storage } from '../services/storage';
+import { auth } from '../services/auth';
 
 export class OrderManager {
   constructor(priceData) {
@@ -9,47 +9,126 @@ export class OrderManager {
     this.loadOrders();
   }
 
-  clearOrders() {
-    this.orders = [];
-    this.saveOrders();
+  async loadOrders() {
+    console.log('loadOrders')
+    try {
+      const response = await fetch('/api/orders', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to load orders');
+      }
+      const orders = await response.json();
+      this.orders = orders.map(data => {
+        const order = new Order({
+          name: data.name,
+          phone: data.phone,
+          address: data.address,
+          items: data.items.map(item => ({
+            product: item.product,
+            quantity: item.quantity,
+            subtotal: item.subtotal
+          }))
+        });
+        order.id = data.id;
+        return order;
+      });
+      this.recalculateAll();
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      throw error;
+    }
   }
 
-  loadOrders() {
-    const savedOrders = storage.loadCustomers();
-    this.orders = savedOrders.map(data => new Order(data));
-    this.recalculateAll();
+  async addOrder(orderData) {
+    try {
+      console.log('addorder')
+      const order = new Order(orderData);
+      this.calculator.calculateOrder(order);
+      
+      // 如果没有登录用户，使用默认用户
+      const userId = auth.currentUser?.id || '00000000-0000-0000-0000-000000000000';
+      
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...order.toJSON(),
+          total: order.total,
+          userId: userId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      const savedOrder = await response.json();
+      order.id = savedOrder.id;
+      this.orders.push(order);
+      return order;
+    } catch (error) {
+      console.error('Error adding order:', error);
+      throw error;
+    }
   }
 
-  saveOrders() {
-    storage.saveCustomers(this.orders.map(order => order.toJSON()));
+  async updateOrder(index, orderData) {
+    console.log('updateOrder')
+    try {
+      const order = new Order(orderData);
+      this.calculator.calculateOrder(order);
+      
+      const existingOrder = this.orders[index];
+      const response = await fetch(`/api/orders/${existingOrder.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...order.toJSON(),
+          total: order.total
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update order');
+      }
+
+      this.orders[index] = order;
+      return order;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      throw error;
+    }
   }
 
-  addOrder(orderData) {
-    const order = new Order(orderData);
-    this.calculator.calculateOrder(order);
-    this.orders.push(order);
-    this.saveOrders();
-    return order;
-  }
+  async deleteOrder(index) {
+    try {
+      const order = this.orders[index];
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: 'DELETE'
+      });
 
-  updateOrder(index, orderData) {
-    const order = new Order(orderData);
-    this.calculator.calculateOrder(order);
-    this.orders[index] = order;
-    this.saveOrders();
-    return order;
-  }
+      if (!response.ok) {
+        throw new Error('Failed to delete order');
+      }
 
-  deleteOrder(index) {
-    this.orders.splice(index, 1);
-    this.saveOrders();
+      this.orders.splice(index, 1);
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      throw error;
+    }
   }
 
   moveOrder(fromIndex, toIndex) {
     const order = this.orders[fromIndex];
     this.orders.splice(fromIndex, 1);
     this.orders.splice(toIndex, 0, order);
-    this.saveOrders();
   }
 
   recalculateAll() {
@@ -66,9 +145,9 @@ export class OrderManager {
         if (!summary[item.product]) {
           summary[item.product] = { quantity: 0, amount: 0 };
         }
-        summary[item.product].quantity += item.quantity;
+        summary[item.product].quantity += parseFloat(item.quantity);
         summary[item.product].amount += item.subtotal;
-        totalQuantity += item.quantity;
+        totalQuantity += parseFloat(item.quantity);
         totalAmount += item.subtotal;
       });
     });

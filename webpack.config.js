@@ -50,7 +50,11 @@ module.exports = {
       directory: path.join(__dirname, 'public')
     },
     proxy: {
-      '/api': 'http://localhost:3000'
+      '/api': {
+        target: 'http://localhost:3000',
+        pathRewrite: { '^/api': '/api' },
+        changeOrigin: true
+      }
     },
     hot: true,
     port: 8080
