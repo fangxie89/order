@@ -43,6 +43,7 @@ function OrderForm() {
     orders,
     currentOrderIndex,
     priceData,
+    addOrder,
     updateOrder,
     showNotification
   } = useContext(AppContext);
@@ -105,7 +106,8 @@ function OrderForm() {
     };
 
     if (currentOrderIndex === -1) {
-      updateOrder(order);
+      console.log('-1')
+      addOrder(order);
     } else {
       updateOrder(currentOrderIndex, order);
     }

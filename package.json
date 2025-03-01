@@ -3,24 +3,30 @@
   "version": "1.0.0",
   "description": "Dessert ordering system",
   "main": "server/server.js",
+  "proxy": "http://localhost:3000",
   "scripts": {
     "start": "node server/server.js",
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "server": "nodemon server/server.js"
+    "server": "nodemon server/server.js",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "exceljs": "^4.3.0",
-    "body-parser": "^1.19.0",
-    "fs-extra": "^10.0.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "@mui/material": "^5.0.0",
-    "@mui/icons-material": "^5.0.0",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
+    "@mui/icons-material": "^5.0.0",
+    "@mui/material": "^5.0.0",
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^1.19.0",
+    "exceljs": "^4.3.0",
+    "express": "^4.17.1",
+    "fs-extra": "^10.0.0",
     "notistack": "^2.0.3",
+    "prisma": "^6.4.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "styled-components": "^5.3.0"
   },
   "devDependencies": {
@@ -28,14 +34,14 @@
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-react": "^7.14.5",
     "babel-loader": "^8.2.2",
+    "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^6.2.0",
-    "style-loader": "^3.2.1",
     "html-webpack-plugin": "^5.3.2",
     "mini-css-extract-plugin": "^2.2.0",
+    "nodemon": "^2.0.12",
+    "style-loader": "^3.2.1",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0",
-    "webpack-dev-server": "^4.0.0",
-    "copy-webpack-plugin": "^9.0.1",
-    "nodemon": "^2.0.12"
+    "webpack-dev-server": "^4.0.0"
   }
-} 
+}

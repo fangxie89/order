@@ -1,37 +1,40 @@
-import { User } from '../models/User';
-
-const USERS = {
-  'admin': { password: 'tn1lJBB?', role: 'admin' },
-  'user': { password: 'user123', role: 'user' }
-};
+import { api } from './api';
 
 export const auth = {
   currentUser: null,
 
   async login(username, password) {
-    // 模拟API请求延迟
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
 
-    const user = USERS[username];
-    if (!user || user.password !== password) {
-      throw new Error('用户名或密码错误');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error);
+      }
+
+      const user = await response.json();
+      this.currentUser = user;
+      return user;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-
-    this.currentUser = new User({ username, role: user.role });
-    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-    return this.currentUser;
   },
 
   logout() {
     this.currentUser = null;
-    localStorage.removeItem('currentUser');
   },
 
   restoreSession() {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      this.currentUser = new User(userData);
+      this.currentUser = JSON.parse(savedUser);
       return this.currentUser;
     }
     return null;

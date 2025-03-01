@@ -5,6 +5,7 @@ import CustomerList from './components/CustomerList';
 import OrderForm from './components/OrderForm';
 import ProductSummary from './components/ProductSummary';
 import GroupOrderDialog from './components/GroupOrderDialog';
+import ProductManageDialog from './components/ProductManageDialog';
 import Login from './components/Login';
 import { AppContext } from './context/AppContext';
 import { OrderManager } from './models/OrderManager';
@@ -14,19 +15,15 @@ import { auth } from './services/auth';
 import useNotification from './hooks/useNotification';
 
 function App() {
-  const [orderManager, setOrderManager] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [currentOrderIndex, setCurrentOrderIndex] = useState(-1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [user, setUser] = useState(null);
   const { showNotification } = useNotification();
+  const [orderManager, setOrderManager] = useState(null);
 
   useEffect(() => {
-    // 尝试恢复用户会话
-    const savedUser = auth.restoreSession();
-    if (savedUser) {
-      setUser(savedUser);
-      loadInitialData();
-    }
   }, []);
 
   const handleLogin = (user) => {
@@ -44,9 +41,23 @@ function App() {
 
   const loadInitialData = async () => {
     try {
-      const response = await fetch('/assets/price.json');
+      const response = await fetch('/api/products');
       const priceData = await response.json();
-      setOrderManager(new OrderManager(priceData));
+      console.log('priceData', priceData);
+      // 转换数据格式以匹配原有的 price.json 结构
+      const formattedPriceData = priceData.reduce((acc, product) => {
+        acc[product.name] = {
+          price: product.price,
+          half: product.half || null
+        };
+        return acc;
+      }, {});
+
+      const manager = new OrderManager(formattedPriceData);
+      manager.loadOrders().then(() => {
+        setOrders([...manager.orders]);
+      });
+      setOrderManager(manager);
     } catch (error) {
       console.error('Failed to load initial data:', error);
       showNotification('加载数据失败！', 'error');
@@ -105,7 +116,7 @@ function App() {
         const importedOrders = JSON.parse(e.target.result);
         if (Array.isArray(importedOrders)) {
           // 创建新的 OrderManager 实例并合并数据
-          const newManager = new OrderManager(orderManager.calculator.priceData);
+          const newMafginager = new OrderManager(orderManager.calculator.priceData);
           newManager.orders = importedOrders.map(data => new Order(data));
           newManager.recalculateAll();
 
@@ -164,6 +175,25 @@ function App() {
     }
   };
 
+  const handleAddOrder = async (orderData) => {
+    try {
+      const order = await orderManager.addOrder(orderData);
+      setOrders([...orderManager.orders]);
+      showNotification('订单已添加');
+    } catch (error) {
+      showNotification('添加订单失败', 'error');
+    }
+  };
+
+  const handleUpdateOrder = async (index, orderData) => {
+    try {
+      await orderManager.updateOrder(index, orderData);
+      setOrders([...orderManager.orders]);
+      showNotification('订单已更新');
+    } catch (error) {
+      showNotification('更新订单失败', 'error');
+    }
+  };
   if (!user) {
     return (
       <SnackbarProvider maxSnack={3}>
@@ -178,11 +208,14 @@ function App() {
   }
 
   const contextValue = {
-    orders: orderManager.orders,
-    addOrder: orderManager.addOrder.bind(orderManager),
-    updateOrder: orderManager.updateOrder.bind(orderManager),
+    orders,
     currentOrderIndex,
+    setCurrentOrderIndex,
     priceData: orderManager.calculator.priceData,
+    addOrder: handleAddOrder,
+    updateOrder: handleUpdateOrder,
+    deleteOrder: orderManager.deleteOrder.bind(orderManager),
+    moveOrder: orderManager.moveOrder.bind(orderManager),
     showNotification,
     user
   };
@@ -206,6 +239,12 @@ function App() {
                 </Button>
               </Box>
               <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setIsProductDialogOpen(true)}
+                >
+                  商品管理
+                </Button>
                 <Button 
                   variant="contained" 
                   color="error" 
@@ -248,6 +287,10 @@ function App() {
             <GroupOrderDialog
               open={isDialogOpen}
               onClose={() => setIsDialogOpen(false)}
+            />
+            <ProductManageDialog
+              open={isProductDialogOpen}
+              onClose={() => setIsProductDialogOpen(false)}
             />
           </Box>
         </Container>

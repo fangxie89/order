@@ -29,11 +29,11 @@ function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError('');
     setLoading(true);
-
+    
     try {
       const user = await auth.login(username, password);
       onLoginSuccess(user);

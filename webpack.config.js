@@ -50,7 +50,12 @@ module.exports = {
       directory: path.join(__dirname, 'public')
     },
     proxy: {
-      '/api': 'http://localhost:3000'
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        logLevel: 'debug'
+      }
     },
     hot: true,
     port: 8080

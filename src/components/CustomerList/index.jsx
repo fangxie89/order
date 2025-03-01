@@ -43,10 +43,10 @@ const FlexBox = styled.div`
 `;
 
 function CustomerList({ onSelect, onDelete, onMove }) {
-  const { orders: customers, currentOrderIndex } = useContext(AppContext);
+  const { orders, currentOrderIndex } = useContext(AppContext);
 
-  if (!customers) {
-    return null;
+  if (!orders || orders.length === 0) {
+    return <Typography>暂无订单</Typography>;
   }
 
   return (
@@ -54,7 +54,7 @@ function CustomerList({ onSelect, onDelete, onMove }) {
       <Typography variant="h5" gutterBottom>
         客户列表
       </Typography>
-      {customers.map((customer, index) => (
+      {orders.map((customer, index) => (
         <StyledCard
           key={index}
           active={index === currentOrderIndex}
