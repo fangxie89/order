@@ -13,12 +13,17 @@ router.get('/', async (req, res) => {
     res.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     res.status(500).json({ error: '获取产品列表失败' });
   }
 });
 
 // 创建产品
-router.post('/products', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { name, price, half } = req.body;
     const product = await prisma.product.create({
@@ -32,7 +37,7 @@ router.post('/products', async (req, res) => {
 });
 
 // 更新产品
-router.put('/products/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, half } = req.body;
@@ -48,7 +53,7 @@ router.put('/products/:id', async (req, res) => {
 });
 
 // 删除产品
-router.delete('/products/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.product.delete({

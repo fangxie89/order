@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "Dessert ordering system",
   "main": "server/server.js",
-  "proxy": "http://localhost:3000",
   "scripts": {
     "start": "node server/server.js",
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
     "server": "nodemon server/server.js",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@emotion/react": "^11.4.1",
