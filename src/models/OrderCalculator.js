@@ -6,6 +6,7 @@ export class OrderCalculator {
   calculateOrder(order) {
     order.items.forEach(item => {
       const product = this.priceData[item.product];
+      console.log(this.priceData)
       if (product) {
         const quantity = parseFloat(item.quantity);
         item.subtotal = this.calculateSubtotal(product, quantity);

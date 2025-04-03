@@ -1,9 +1,13 @@
 export class Order {
-  constructor({ name, phone, address, items = [] }) {
-    this.name = name;
-    this.phone = phone;
-    this.address = address;
-    this.items = items;
+  constructor({ name, phone, address, items = [], date = new Date() }) {
+    this.id = null;
+    this.name = name || '';
+    this.phone = phone || '';
+    this.address = address || '';
+    this.items = items || [];
+    this._total = 0;
+    this.position = 0;
+    this.date = date;
   }
 
   addItem(product, quantity) {
@@ -27,15 +31,23 @@ export class Order {
   }
 
   get total() {
-    return this.items.reduce((sum, item) => sum + item.subtotal, 0);
+    return this._total;
+  }
+
+  set total(value) {
+    this._total = value;
   }
 
   toJSON() {
     return {
+      id: this.id,
       name: this.name,
       phone: this.phone,
       address: this.address,
-      items: this.items
+      items: this.items,
+      total: this._total,
+      position: this.position,
+      date: this.date
     };
   }
 } 

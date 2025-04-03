@@ -1,11 +1,9 @@
-import { api } from './api';
-
 export const auth = {
-  token: localStorage.getItem('token'),  // 初始化时从 localStorage 获取 token
-  user: JSON.parse(localStorage.getItem('user')), // 初始化时从 localStorage 获取用户信息
+  token: localStorage.getItem('token'),
+  user: JSON.parse(localStorage.getItem('user')),
 
   async login(username, password) {
-    const response = await fetch('/api/users/login', {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -21,11 +19,10 @@ export const auth = {
     this.token = data.token;
     this.user = data.user;
     
-    // 保存到 localStorage
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     
-    return data.user;
+    return data;
   },
 
   async logout() {
@@ -35,7 +32,6 @@ export const auth = {
     this.token = null;
     this.user = null;
     
-    // 清除 localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },

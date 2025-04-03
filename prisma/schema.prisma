@@ -26,8 +26,10 @@ model Order {
   address   String?
   items     OrderItem[]
   total     Float
+  position  Int
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  date      DateTime @default(now())
 }
 
 model OrderItem {

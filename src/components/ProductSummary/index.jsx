@@ -20,7 +20,6 @@ const SummaryContainer = styled.div`
 
 // 格式化数量显示
 const formatQuantity = (quantity) => {
-  console.log(quantity)
   // 如果是整数，直接显示
   if (Number.isInteger(quantity)) {
     return quantity;
@@ -45,7 +44,6 @@ function ProductSummary() {
     let totalQuantity = 0;
     let totalAmount = 0;
 
-    console.log(orders)
     orders.forEach(order => {
       order.items.forEach(item => {
         if (!summary[item.product]) {
@@ -66,7 +64,6 @@ function ProductSummary() {
 
   const { summary, totalQuantity, totalAmount } = calculateSummary();
 
-  console.log(summary)
   return (
     <SummaryContainer>
       <Typography variant="h6" gutterBottom>

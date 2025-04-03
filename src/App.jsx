@@ -13,6 +13,7 @@ import { Order } from './models/Order';
 import { api } from './services/api';
 import { auth } from './services/auth';
 import useNotification from './hooks/useNotification';
+import { initializeProductPrices } from './utils/parser';
 
 function App() {
   const [orders, setOrders] = useState([]);
@@ -24,6 +25,33 @@ function App() {
   const [orderManager, setOrderManager] = useState(null);
 
   useEffect(() => {
+    // 在应用启动时初始化商品价格
+    initializeProductPrices();
+    
+    // 页面加载时检查认证状态
+    const checkAuth = async () => {
+      // 如果本地存储中有用户信息，直接设置用户状态并加载数据
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (storedUser) {
+        setUser(storedUser);
+        loadInitialData();
+      }
+      
+      try {
+        const isValid = await auth.checkAuth();
+        if (!isValid) {
+          // 如果token无效，清除用户状态
+          setUser(null);
+          setOrderManager(null);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setUser(null);
+        setOrderManager(null);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const handleLogin = (user) => {
@@ -43,7 +71,6 @@ function App() {
     try {
       const response = await fetch('/api/products');
       const priceData = await response.json();
-      console.log('priceData', priceData);
       // 转换数据格式以匹配原有的 price.json 结构
       const formattedPriceData = priceData.reduce((acc, product) => {
         acc[product.name] = {
@@ -68,110 +95,47 @@ function App() {
     setCurrentOrderIndex(index);
   };
 
-  const handleOrderDelete = (index) => {
-    orderManager.deleteOrder(index);
-    if (currentOrderIndex === index) {
-      setCurrentOrderIndex(-1);
-    }
-  };
-
-  const handleOrderMove = (index, direction) => {
-    const newIndex = index + direction;
-    if (newIndex >= 0 && newIndex < orderManager.orders.length) {
-      orderManager.moveOrder(index, newIndex);
+  const handleOrderDelete = async (index) => {
+    try {
+      await orderManager.deleteOrder(index);
+      setOrders([...orderManager.orders]);
       if (currentOrderIndex === index) {
-        setCurrentOrderIndex(newIndex);
-      } else if (currentOrderIndex === newIndex) {
-        setCurrentOrderIndex(index);
+        setCurrentOrderIndex(-1);
       }
-    }
-  };
-
-  const handleExportDaily = async () => {
-    if (orderManager.orders.length === 0) {
-      showNotification('没有可导出的订单数据！', 'error');
-      return;
-    }
-
-    try {
-      const result = await api.saveDailyOrders(orderManager.orders);
-      if (result.success) {
-        showNotification(`订单数据已保存为: ${result.fileName}`);
-      } else {
-        throw new Error(result.error);
-      }
+      showNotification('订单已删除');
     } catch (error) {
-      console.error('Error exporting orders:', error);
-      showNotification('导出订单数据失败！', 'error');
+      showNotification('删除订单失败', 'error');
     }
   };
 
-  const handleImportFile = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
+  const handleMoveOrder = async (index, direction) => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex >= 0 && newIndex < orderManager.orders.length) {
       try {
-        const importedOrders = JSON.parse(e.target.result);
-        if (Array.isArray(importedOrders)) {
-          // 创建新的 OrderManager 实例并合并数据
-          const newMafginager = new OrderManager(orderManager.calculator.priceData);
-          newManager.orders = importedOrders.map(data => new Order(data));
-          newManager.recalculateAll();
-
-          if (orderManager.orders.length > 0 && 
-              confirm('是否要合并导入的订单数据？点击确定合并，点击取消替换现有数据。')) {
-            orderManager.orders.push(...newManager.orders);
-          } else {
-            orderManager.orders = newManager.orders;
-          }
-          orderManager.saveOrders();
-          showNotification('订单数据导入成功！');
-        } else {
-          throw new Error('无效的订单数据格式');
-        }
+        await orderManager.moveOrder(index, newIndex);
+        // 强制更新组件状态以重新渲染
+        setOrders([...orderManager.orders]);
       } catch (error) {
-        console.error('Error parsing import file:', error);
-        showNotification('导入的文件格式无效！', 'error');
+        console.error('Failed to move order:', error);
       }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  };
-
-  const handleGenerateExcel = async () => {
-    if (orderManager.orders.length === 0) {
-      showNotification('没有可导出的订单数据！', 'error');
-      return;
-    }
-
-    try {
-      const blob = await api.saveOrders(orderManager.orders);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `orders_summary_${new Date().toLocaleDateString()}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error generating Excel:', error);
-      showNotification('生成汇总表格失败！', 'error');
     }
   };
 
-  const handleClearOrders = () => {
+  const handleClearOrders = async () => {
     if (orderManager.orders.length === 0) {
       showNotification('列表已经是空的了！', 'info');
       return;
     }
     
     if (confirm('确定要清空所有订单吗？此操作不可恢复！')) {
-      orderManager.clearOrders();
-      setCurrentOrderIndex(-1);
-      showNotification('已清空所有订单');
+      try {
+        await orderManager.clearOrders();
+        setOrders([]);
+        setCurrentOrderIndex(-1);
+        showNotification('已清空所有订单');
+      } catch (error) {
+        showNotification('清空订单失败', 'error');
+      }
     }
   };
 
@@ -180,8 +144,10 @@ function App() {
       const order = await orderManager.addOrder(orderData);
       setOrders([...orderManager.orders]);
       showNotification('订单已添加');
+      return order;
     } catch (error) {
       showNotification('添加订单失败', 'error');
+      throw error;
     }
   };
 
@@ -190,10 +156,13 @@ function App() {
       await orderManager.updateOrder(index, orderData);
       setOrders([...orderManager.orders]);
       showNotification('订单已更新');
+      return true;
     } catch (error) {
       showNotification('更新订单失败', 'error');
+      throw error;
     }
   };
+
   if (!user) {
     return (
       <SnackbarProvider maxSnack={3}>
@@ -215,7 +184,7 @@ function App() {
     addOrder: handleAddOrder,
     updateOrder: handleUpdateOrder,
     deleteOrder: orderManager.deleteOrder.bind(orderManager),
-    moveOrder: orderManager.moveOrder.bind(orderManager),
+    moveOrder: handleMoveOrder,
     showNotification,
     user
   };
@@ -252,27 +221,8 @@ function App() {
                 >
                   清空列表
                 </Button>
-                <Button variant="contained" onClick={handleExportDaily}>
-                  导出当日订单
-                </Button>
-                <input
-                  type="file"
-                  id="importFile"
-                  accept=".json"
-                  style={{ display: 'none' }}
-                  onChange={handleImportFile}
-                />
-                <Button
-                  variant="contained"
-                  onClick={() => document.getElementById('importFile').click()}
-                >
-                  导入订单数据
-                </Button>
                 <Button variant="contained" onClick={() => setIsDialogOpen(true)}>
                   接龙导入
-                </Button>
-                <Button variant="contained" onClick={handleGenerateExcel}>
-                  生成汇总表格
                 </Button>
               </Box>
             </Box>
@@ -280,7 +230,7 @@ function App() {
             <CustomerList
               onSelect={handleOrderSelect}
               onDelete={handleOrderDelete}
-              onMove={handleOrderMove}
+              onMove={handleMoveOrder}
             />
             <OrderForm />
             <ProductSummary />

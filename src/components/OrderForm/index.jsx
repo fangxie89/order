@@ -87,7 +87,7 @@ function OrderForm() {
     setItems(newItems);
   };
 
-  const saveOrder = () => {
+  const saveOrder = async () => {
     if (!name) {
       showNotification('请填写客户姓名！', 'error');
       return;
@@ -105,14 +105,16 @@ function OrderForm() {
       items
     };
 
-    if (currentOrderIndex === -1) {
-      console.log('-1')
-      addOrder(order);
-    } else {
-      updateOrder(currentOrderIndex, order);
+    try {
+      if (currentOrderIndex === -1) {
+        await addOrder(order);
+      } else {
+        await updateOrder(currentOrderIndex, order);
+      }
+      clearForm();
+    } catch (error) {
+      console.error('Error saving order:', error);
     }
-    showNotification('订单已保存');
-    clearForm();
   };
 
   const clearForm = () => {

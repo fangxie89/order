@@ -2,12 +2,11 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../lib/prisma');
-const bcrypt = require('bcryptjs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const TOKEN_EXPIRES_IN = '2h';
 
-// 用户登录
+// 登录路由
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -15,7 +14,7 @@ router.post('/login', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { username }
     });
-    console.log(user)
+
     if (!user || user.password !== password) {
       return res.status(401).json({ error: '用户名或密码错误' });
     }
@@ -43,7 +42,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 添加验证 token 的路由
+// 验证 token 的路由
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   
@@ -59,26 +58,9 @@ router.get('/verify', async (req, res) => {
   }
 });
 
-// 创建用户（仅管理员）
-router.post('/', async (req, res) => {
-  try {
-    const { username, password, role } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const user = await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        role
-      }
-    });
-
-    const { password: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: '创建用户失败' });
-  }
+// 登出路由
+router.post('/logout', (req, res) => {
+  res.json({ success: true });
 });
 
 module.exports = router; 

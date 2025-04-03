@@ -35,7 +35,7 @@ function GroupOrderDialog({ open, onClose }) {
 
     try {
       const parsedOrders = parseGroupOrder(text);
-      
+      console.log(parsedOrders)
       if (parsedOrders.length === 0) {
         setError('未能识别任何有效订单！');
         return;

@@ -1,8 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const ordersRouter = require('./routes/orders');
+const usersRouter = require('./routes/users');
+const productsRouter = require('./routes/products');
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 // 添加请求日志中间件
 app.use((req, res, next) => {
@@ -12,6 +16,13 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+// API 路由 (仅在本地开发时使用)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/orders', ordersRouter);
+  app.use('/api/users', usersRouter);
+  app.use('/api/products', productsRouter);
+}
+
 // 服务静态文件
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -20,5 +31,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Vercel 需要导出 app
-module.exports = app;  
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+  });
+} else {
+  module.exports = app;
+}  
